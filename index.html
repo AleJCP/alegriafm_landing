@@ -213,8 +213,19 @@
         .player-main-btn.playing {
             border-color: var(--accent);
             background: var(--accent);
-            box-shadow: 0 0 48px rgba(192,57,43,0.25);
+            box-shadow: 0 0 48px rgba(232,89,46,0.25);
         }
+
+        .live-badge-subtle {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.4);
+            margin: 8px auto 0;
+            text-align: center;
+            transition: color 0.3s;
+        }
+        .live-badge-subtle.on { color: var(--accent); }
 
         /* Subtle ring on play */
         .player-main-btn.playing::after {
@@ -681,6 +692,7 @@
                 <button class="player-main-btn" id="mainPlay" aria-label="Reproducir">
                     <i class="fas fa-play"></i>
                 </button>
+                <p class="live-badge-subtle" id="liveBadge">EN VIVO</p>
 
                 <!-- Equalizer -->
                 <div class="eq-bars" id="eqBars">
@@ -827,6 +839,8 @@
             const volDown   = document.getElementById('volDown');
             const volUp     = document.getElementById('volUp');
             const eqBars    = document.getElementById('eqBars');
+            const liveBadge = document.getElementById('liveBadge');
+            const STREAM   = 'https://stream.zeno.fm/u0mvuznrazhuv';
 
             let isPlaying = false;
 
@@ -852,6 +866,10 @@
                 miniBtn.classList.toggle('playing', playing);
 
                 // Equalizer
+                // Badge
+                liveBadge.classList.toggle('on', playing);
+
+                // Equalizer
                 playing ? startEQ() : stopEQ();
 
                 // Progress
@@ -870,6 +888,8 @@
 
             function toggle() {
                 if (audio.paused) {
+                    audio.src = STREAM;
+                    audio.load();
                     audio.play().catch(() => {});
                 } else {
                     audio.pause();
