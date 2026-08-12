@@ -89,7 +89,51 @@
         .header .nav-links { display: flex; gap: 24px; flex-shrink: 0; }
         .header .nav-links a { font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--navy); padding: 6px 0; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .header .nav-links a:hover { border-color: var(--accent); color: var(--accent); }
-        @media (max-width: 768px) { .header .container { flex-wrap: wrap; } .header .nav-links { width: 100%; justify-content: center; gap: 16px; margin-top: 8px; } .header .nav-links a { font-size: 11px; } }
+        @media (max-width: 768px) {
+            .header .container { flex-wrap: wrap; }
+            .header .logo-img { width: 120px; height: 50px; font-size: 16px; }
+            .header h1 { font-size: 18px; }
+            .header .nav-links { width: 100%; justify-content: center; gap: 12px; margin-top: 8px; }
+            .header .nav-links a { font-size: 10px; letter-spacing: 0.5px; }
+            .top-bar { font-size: 10px; padding: 4px 0; }
+            .top-bar .socials { gap: 8px; }
+            .top-bar .socials a { width: 24px; height: 24px; font-size: 11px; }
+            .hero-player { padding: 32px 0 40px; }
+            .player-main-btn { width: 64px; height: 64px; }
+            .player-main-btn i { font-size: 22px; }
+            .player-title { font-size: 22px; }
+            .section { padding: 40px 0; }
+            .section-header h2 { font-size: 22px; }
+            .carousel-wrap { padding: 0 34px; }
+            .carousel-track { gap: 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 0 16px; }
+            .top-bar .live-indicator { font-size: 10px; letter-spacing: 1px; }
+            .mini-btn { width: 24px; height: 24px; font-size: 10px; }
+            .hero-player { padding: 24px 0 32px; }
+            .player-title { font-size: 18px; }
+            .player-main-btn { width: 56px; height: 56px; }
+            .player-main-btn i { font-size: 18px; }
+            .carousel-wrap { padding: 0 28px; }
+            .carousel-arrow { width: 28px; height: 28px; font-size: 16px; }
+            .section-header h2 { font-size: 20px; }
+        }
+
+        /* =============================================
+           ANIMATIONS
+           ============================================= */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        .slide-card, .feed-card, .contact-content {
+            transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.35s ease, opacity 0.3s ease;
+        }
 
         /* =============================================
            HERO PLAYER (custom)
@@ -562,9 +606,9 @@
             display: inline-block; padding: 15px 44px; font-size: 12px;
             font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
             color: #fff; background: var(--accent); border: none;
-            cursor: pointer; transition: background 0.2s, transform 0.2s;
+            cursor: pointer; transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
         }
-        .btn:hover { background: var(--accent-h); transform: translateY(-1px); }
+        .btn:hover { background: var(--accent-h); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(232,89,46,0.3); }
         .contact-email { font-size: 13px; color: var(--text-dim); margin-top: 18px; }
 
         /* =============================================
@@ -598,7 +642,7 @@
     <!-- TOP BAR -->
     <div class="top-bar">
         <div class="container">
-            <div class="live-indicator"><span class="live-dot"></span> EN VIVO — 104.5 FM <button class="mini-btn" id="miniPlay" aria-label="Reproducir" title="Reproducir / Pausar">▶</button></div>
+            <div class="live-indicator"><span class="live-dot"></span> 104.5 FM <button class="mini-btn" id="miniPlay" aria-label="Reproducir" title="Reproducir / Pausar"><i class="fas fa-play"></i></button></div>
             <div class="socials">
                 <a href="https://wa.me/584141234567" class="social-wa" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                 <a href="https://t.me/alegriaradio104" class="social-tg" target="_blank" rel="noopener" title="Telegram"><i class="fab fa-telegram-plane"></i></a>
@@ -618,7 +662,7 @@
             </div>
             <nav class="nav-links">
                 <a href="#player">En vivo</a>
-                <a href="#banners">Auspiciantes</a>
+                <a href="#banners">Patrocinadores</a>
                 <a href="#programas">Programas</a>
                 <a href="#redes">Redes</a>
                 <a href="#contacto">Contacto</a>
@@ -636,7 +680,7 @@
 
                 <!-- Main play/pause button -->
                 <button class="player-main-btn" id="mainPlay" aria-label="Reproducir">
-                    ▶
+                    <i class="fas fa-play"></i>
                 </button>
 
                 <!-- Equalizer -->
@@ -663,11 +707,11 @@
 
                 <!-- Volume -->
                 <div class="player-volume-row">
-                    <span id="volDown" title="Bajar volumen">🔈</span>
+                    <span id="volDown" title="Bajar volumen"><i class="fas fa-volume-down"></i></span>
                     <div class="player-volume" id="volumeBar">
                         <div class="player-volume-fill" id="volumeFill"></div>
                     </div>
-                    <span id="volUp" title="Subir volumen">🔊</span>
+                    <span id="volUp" title="Subir volumen"><i class="fas fa-volume-up"></i></span>
                 </div>
             </div>
         </div>
@@ -760,8 +804,8 @@
         <div class="container">
             <div class="gold-line"></div>
             <div class="contact-btns">
-                <a href="https://wa.me/584141234567" class="btn-wa" target="_blank" rel="noopener">💬 WhatsApp</a>
-                <a href="https://t.me/alegriaradio104" class="btn-tg" target="_blank" rel="noopener">📨 Telegram</a>
+                <a href="https://wa.me/584141234567" class="btn-wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                <a href="https://t.me/alegriaradio104" class="btn-tg" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Telegram</a>
             </div>
             <p class="copy">© 2026 Alegría Radio 104.5 FM — Punto Fijo, Falcón</p>
             <p class="tagline">24 horas de música y entretenimiento</p>
@@ -803,11 +847,9 @@
                 isPlaying = playing;
 
                 // Main button
-                mainBtn.textContent = playing ? '⏸' : '▶';
+                mainBtn.innerHTML = playing ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
                 mainBtn.classList.toggle('playing', playing);
-
-                // Mini button
-                miniBtn.textContent = playing ? '⏸' : '▶';
+                miniBtn.innerHTML = playing ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
                 miniBtn.classList.toggle('playing', playing);
 
                 // Equalizer
@@ -942,6 +984,14 @@
 
         initCarousel('bannerCarousel', 'bannerTrack');
         initCarousel('programCarousel', 'programTrack');
+
+        // Scroll animations
+        const revealEls = document.querySelectorAll('.section-header, .slide-card, .feed-card, .contact-content');
+        revealEls.forEach(el => el.classList.add('reveal'));
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        revealEls.forEach(el => obs.observe(el));
     </script>
 
 </body>
