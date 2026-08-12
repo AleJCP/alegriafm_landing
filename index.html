@@ -67,7 +67,7 @@
         .mini-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.25); background: transparent; color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .mini-btn:hover { border-color: #fff; background: rgba(255,255,255,0.1); }
         .mini-btn.playing { background: var(--accent); border-color: var(--accent); }
-        .top-bar .live-dot { width: 8px; height: 8px; background: #2ecc71; border-radius: 50%; animation: pulse 2s infinite; }
+        .top-bar .live-dot { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.2;transform:scale(1.4)} }
         .top-bar .socials { display: flex; gap: 12px; align-items: center; }
         .top-bar .socials a { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; color: #fff; transition: transform 0.2s; }
@@ -147,7 +147,7 @@
            HERO PLAYER (custom)
            ============================================= */
         .hero-player {
-            background: linear-gradient(160deg, #1a1f6e 0%, #2424A0 40%, #1b2a3a 100%);
+            background: linear-gradient(160deg, #1a1f6e 0%, #2424A0 40%, #161d8a 100%);
             color: #fff;
             padding: 56px 0 64px;
             text-align: center;
@@ -221,19 +221,19 @@
         .player-main-btn.playing {
             border-color: var(--accent);
             background: var(--accent);
-            box-shadow: 0 0 48px rgba(232,89,46,0.25);
+            box-shadow: 0 0 48px rgba(36,36,160,0.3);
         }
 
         .live-badge-subtle {
             font-size: 10px;
             font-weight: 600;
             letter-spacing: 3px;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.55);
             margin: 8px auto 0;
             text-align: center;
             transition: color 0.3s;
         }
-        .live-badge-subtle.on { color: var(--accent); }
+        .live-badge-subtle.on { color: rgba(255,255,255,0.9); }
 
         /* Subtle ring on play */
         .player-main-btn.playing::after {
@@ -241,7 +241,7 @@
             position: absolute;
             inset: -6px;
             border-radius: 50%;
-            border: 1.5px solid rgba(192,57,43,0.25);
+            border: 1.5px solid rgba(229,204,31,0.4);
             animation: ring 2.5s ease-out infinite;
             pointer-events: none;
         }
