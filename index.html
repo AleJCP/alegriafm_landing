@@ -279,6 +279,17 @@
         }
         .live-badge-subtle.on { color: rgba(255,255,255,0.9); }
 
+        .live-badge-subtle .live-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            margin-right: 7px;
+            vertical-align: middle;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
         .signal-status {
             font-size: 10px;
             font-weight: 600;
@@ -818,7 +829,7 @@
                 <button class="player-main-btn" id="mainPlay" aria-label="Reproducir">
                     <i class="fas fa-play"></i>
                 </button>
-                <p class="live-badge-subtle" id="liveBadge">EN VIVO</p>
+                <p class="live-badge-subtle" id="liveBadge"><span class="live-dot"></span>EN VIVO</p>
                 <p class="signal-status" id="signalStatus" hidden>Sin señal — reintentando…</p>
 
                 <!-- Ahora suena: solo el tema -->
