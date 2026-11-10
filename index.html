@@ -893,6 +893,11 @@
 
             let isPlaying = false;
 
+            // Intención del usuario: sobrevive a pausas del sistema
+            let wantsPlay  = false;
+            let retryTimer = null;
+            let retries    = 0;
+
             const eqBarsEl = document.querySelectorAll('#eqBars .eq-bar');
             function startEQ() { eqBarsEl.forEach(b => b.classList.add('play')); }
             function stopEQ()  { eqBarsEl.forEach(b => b.classList.remove('play')); }
@@ -933,17 +938,52 @@
 
                 // Volume
                 volFill.style.width = (audio.volume * 100) + '%';
+
+                // Estado para la pantalla bloqueada
+                if ('mediaSession' in navigator) {
+                    try { navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'; } catch (e) {}
+                }
+            }
+
+            // Arranca o rearranca el stream. El cache-buster (?t=) evita
+            // reusar el buffer viejo cuando se reconecta.
+            function startStream() {
+                clearTimeout(retryTimer);
+                retryTimer = null;
+                audio.src = STREAM + '?t=' + Date.now();
+                audio.load();
+                const p = audio.play();
+                if (p && p.catch) p.catch(function () { scheduleRetry(); });
+            }
+
+            function stopStream() {
+                wantsPlay = false;
+                clearTimeout(retryTimer);
+                retryTimer = null;
+                audio.pause();
+                updateUI();
+            }
+
+            // Reconexión con espera progresiva, sin límite de intentos
+            function scheduleRetry() {
+                if (!wantsPlay || retryTimer) return;
+                retries = Math.min(retries + 1, 5);
+                const wait = Math.min(15000, 1000 * Math.pow(2, retries - 1));
+                retryTimer = setTimeout(function () {
+                    retryTimer = null;
+                    if (wantsPlay) startStream();
+                }, wait);
             }
 
             function toggle() {
-                if (audio.paused) {
-                    audio.src = STREAM;
-                    audio.load();
-                    audio.play().catch(() => {});
+                if (wantsPlay) {
+                    stopStream();
                 } else {
-                    audio.pause();
+                    wantsPlay = true;
+                    retries = 0;
+                    startStream();
+                    updateUI();
                 }
-                updateUI();
             }
 
             mainBtn.addEventListener('click', toggle);
@@ -954,6 +994,62 @@
             audio.addEventListener('timeupdate', updateUI);
             audio.addEventListener('loadedmetadata', updateUI);
             audio.addEventListener('volumechange', updateUI);
+
+            // ---- Resiliencia de reproducción ----
+            // Pantalla apagada, cambio de red o suspensión del sistema cortan
+            // el stream; acá se reconecta solo mientras el usuario quiera oír.
+            let stallTimer = null;
+
+            audio.addEventListener('stalled', function () { scheduleRetry(); });
+            audio.addEventListener('error',   function () { scheduleRetry(); });
+            audio.addEventListener('ended',   function () { scheduleRetry(); });
+
+            audio.addEventListener('waiting', function () {
+                clearTimeout(stallTimer);
+                stallTimer = setTimeout(function () {
+                    if (wantsPlay && audio.readyState < 3) scheduleRetry();
+                }, 6000);
+            });
+
+            audio.addEventListener('playing', function () {
+                clearTimeout(stallTimer);
+                retries = 0;
+            });
+
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState === 'visible' && wantsPlay && audio.paused) {
+                    startStream();
+                }
+            });
+
+            window.addEventListener('pageshow', function () {
+                if (wantsPlay && audio.paused) startStream();
+            });
+
+            // ---- Media Session: controles en pantalla bloqueada ----
+            if ('mediaSession' in navigator) {
+                try {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: 'Alegría Radio 104.5 FM',
+                        artist: 'En vivo',
+                        album: 'Punto Fijo, Falcón'
+                    });
+                    navigator.mediaSession.setActionHandler('play', function () {
+                        wantsPlay = true;
+                        startStream();
+                    });
+                    navigator.mediaSession.setActionHandler('pause', stopStream);
+                    navigator.mediaSession.setActionHandler('stop', stopStream);
+                } catch (e) {}
+            }
+
+            // Permite que el módulo del tema actual actualice la pantalla bloqueada
+            window._setMediaTitle = function (title) {
+                if (!title) return;
+                if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
+                    try { navigator.mediaSession.metadata.title = title; } catch (e) {}
+                }
+            };
 
             // Progress bar click
             progress.addEventListener('click', function(e) {
@@ -1086,6 +1182,8 @@
                 }
                 playerTitle.textContent = track;
                 player.hidden = false;
+
+                if (window._setMediaTitle) window._setMediaTitle(track);
             }
 
             function paintTicker() {
