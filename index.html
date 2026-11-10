@@ -75,14 +75,22 @@
 
         /* Ticker del header (aviso + tema) */
         .top-bar .ticker {
-            flex: 1 1 auto;
+            flex: 1 1 0;
             min-width: 0;
             overflow: hidden;
+            display: flex;
+            align-items: center;
         }
 
         .top-bar .ticker[hidden] { display: none; }
 
-        .top-bar .ticker-viewport { display: block; overflow: hidden; }
+        .top-bar .ticker-viewport {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: block;
+            overflow: hidden;
+            line-height: 1.2;
+        }
 
         .top-bar .ticker-track {
             display: block;
@@ -711,8 +719,7 @@
         .btn-wa { background: #25D366; }
         .btn-tg { background: #0088cc; }
         .btn-wa:hover, .btn-tg:hover { opacity: 0.85; }
-        .footer .copy { font-size: 12px; color: #7a828b; }
-        .footer .tagline { font-size: 12px; color: #5a6168; font-style: italic; margin-top: 6px; }
+        .footer .copy { font-size: 12px; color: #d5d9e0; }
         .footer .gold-line { width: 40px; height: 2px; background: var(--gold); margin: 0 auto 20px; }
     </style>
 </head>
@@ -816,8 +823,7 @@
                 <h2>Programación y espacios publicitarios</h2>
             </div>
             <div class="contact-content">
-                <p>Estamos preparando la grilla de programas y los auspiciantes que nos van a acompañar. A partir de enero los vas a encontrar en esta página.</p>
-                <a href="#contacto" class="btn">Consultas de pauta</a>
+                <p>Estamos preparando la grilla de programas y los auspiciantes que nos van a acompañar.</p>
             </div>
         </div>
     </section>
@@ -862,8 +868,7 @@
                 <a href="https://t.me/alegriaradio104" class="btn-tg" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Telegram</a>
             </div>
             <p class="copy">© 2026 Alegría Radio 104.5 FM — Punto Fijo, Falcón</p>
-            <p class="tagline">24 horas de música y entretenimiento</p>
-            <p style="font-size:11px;color:#555;margin-top:8px;">Hecho por <a href="https://alejcp.github.io/AleJCP/" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">AleJCP</a></p>
+            <p style="font-size:11px;color:#b9c0cc;margin-top:8px;">Hecho por <a href="https://alejcp.github.io/AleJCP/" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">AleJCP</a></p>
         </div>
     </footer>
 
@@ -997,16 +1002,33 @@
             const tickerTrack = document.getElementById('tickerTrack');
             if (!ticker || !tickerTrack) return;
 
-            const PROMO = 'Próximamente: los programas de tu radio favorita — Alegría Radio 104.5 FM';
+            const PROMO = 'Los programas de tu radio favorita llegan pronto — Alegría Radio 104.5 FM';
             const SEP   = '   •   ';
             const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-            let track = '';
+            let track = '';   // el tema que está sonando
+
+            // Retardo para alinear el texto con el audio: la metadata llega
+            // antes de que el oyente escuche el tema nuevo (buffer del stream).
+            const DELAY = 8000;
+            let pending = null;
+            let pendingTitle = '';
+
+            function schedule(title) {
+                if (title === track || title === pendingTitle) return;
+
+                pendingTitle = title;
+                if (pending) clearTimeout(pending);
+                pending = setTimeout(function () {
+                    pending = null;
+                    pendingTitle = '';
+                    track = title;
+                    paint();
+                }, DELAY);
+            }
             const ENDPOINT = 'https://api.zeno.fm/mounts/metadata/subscribe/u0mvuznrazhuv';
             const MINOR = ['de','del','la','las','el','los','y','e','o','u','a','al','en','con','por','para','que','un','una','lo','se','su','mi','tu'];
             const JUNK = /alegr[ií]a\s*radio|radio\s*alegr[ií]a|104[.,]?5/i;
-
-            let received = false;
 
             function titleCase(s) {
                 let first = true;
@@ -1082,20 +1104,16 @@
                 paintTicker();
             }
 
-            const timer = setTimeout(function () { if (!received) paint(); }, 10000);
+            // Pintado inmediato: el aviso se ve desde el arranque y el tema
+            // entra recien cuando pasa el retardo.
+            paint();
 
-            if (typeof window.EventSource !== 'function') {
-                clearTimeout(timer);
-                paint();
-                return;
-            }
+            if (typeof window.EventSource !== 'function') return;
 
             let es;
             try {
                 es = new EventSource(ENDPOINT);
             } catch (err) {
-                clearTimeout(timer);
-                paint();
                 return;
             }
 
@@ -1104,21 +1122,7 @@
                 try { data = JSON.parse(ev.data); } catch (err) { return; }
 
                 const title = clean(data && data.streamTitle);
-                if (title) {
-                    received = true;
-                    clearTimeout(timer);
-                    track = title;
-                    paint();
-                } else if (!received) {
-                    paint();
-                }
-            });
-
-            es.addEventListener('error', function () {
-                if (!received) {
-                    clearTimeout(timer);
-                    paint();
-                }
+                if (title) schedule(title);
             });
 
             window.addEventListener('resize', function () { paint(); });
