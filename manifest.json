@@ -1,0 +1,27 @@
+{
+  "name": "Alegría Radio 104.5 FM",
+  "short_name": "Alegría Radio",
+  "description": "Radio en vivo desde Punto Fijo, Falcón.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#2632AE",
+  "theme_color": "#2632AE",
+  "icons": [
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
