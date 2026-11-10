@@ -1014,8 +1014,19 @@
             let pending = null;
             let pendingTitle = '';
 
+            let first = true;
+
             function schedule(title) {
                 if (title === track || title === pendingTitle) return;
+
+                // El primer tema se muestra al instante: no hay audio previo
+                // que respetar, el retardo solo aplica a los cambios.
+                if (first) {
+                    first = false;
+                    track = title;
+                    paint();
+                    return;
+                }
 
                 pendingTitle = title;
                 if (pending) clearTimeout(pending);
