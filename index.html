@@ -677,8 +677,6 @@
                 <p class="freq">104.5 FM — Punto Fijo, Falcón</p>
             </div>
             <nav class="nav-links">                
-                <a href="#banners">Patrocinadores</a>
-                <a href="#programas">Programas</a>
                 <a href="#redes">Redes</a>
                 <a href="#contacto">Contacto</a>
             </nav>
@@ -733,47 +731,16 @@
         </div>
     </section>
 
-    <!-- BANNERS -->
-    <section class="section banners-section" id="banners">
+    <!-- PROXIMAMENTE -->
+    <section class="section" id="proximamente">
         <div class="container">
-            <div class="section-header">                
-                <h2>Quienes confían en nosotros</h2>
+            <div class="section-header">
+                <p class="overline">Próximamente</p>
+                <h2>Programación y espacios publicitarios</h2>
             </div>
-            <div class="carousel-wrap" id="bannerCarousel">
-                <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
-                <div class="carousel-window">
-                    <div class="carousel-track" id="bannerTrack">
-                        <!-- REEMPLAZAR slide-card-img con background: url('img/banner-X.jpg') center/cover; -->
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Auspiciante 1</span></div><div class="slide-card-body"><h4>Banner 1</h4></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Auspiciante 2</span></div><div class="slide-card-body"><h4>Banner 2</h4></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Auspiciante 3</span></div><div class="slide-card-body"><h4>Banner 3</h4></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Auspiciante 4</span></div><div class="slide-card-body"><h4>Banner 4</h4></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Auspiciante 5</span></div><div class="slide-card-body"><h4>Banner 5</h4></div></div>
-                    </div>
-                </div>
-                <button class="carousel-arrow next" aria-label="Siguiente">›</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- PROGRAMAS -->
-    <section class="section programs-section" id="programas">
-        <div class="container">
-            <div class="section-header">                
-                <h2>Nuestros programas</h2>
-            </div>
-            <div class="carousel-wrap" id="programCarousel">
-                <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
-                <div class="carousel-window">
-                    <div class="carousel-track" id="programTrack">
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Programa 1</span></div><div class="slide-card-body"><h4>El Mañanero</h4><p>Lun a Vie — 6:00 AM</p></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Programa 2</span></div><div class="slide-card-body"><h4>La Hora Pico</h4><p>Lun a Vie — 12:00 PM</p></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Programa 3</span></div><div class="slide-card-body"><h4>Ritmo de la Tarde</h4><p>Lun a Vie — 4:00 PM</p></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Programa 4</span></div><div class="slide-card-body"><h4>Noche de Éxitos</h4><p>Lun a Sab — 8:00 PM</p></div></div>
-                        <div class="slide-card"><div class="slide-card-img"><span class="placeholder">Programa 5</span></div><div class="slide-card-body"><h4>Fin de Semana</h4><p>Sab y Dom — 10:00 AM</p></div></div>
-                    </div>
-                </div>
-                <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+            <div class="contact-content">
+                <p>Estamos preparando la grilla de programas y los auspiciantes que nos van a acompañar. A partir de enero los vas a encontrar en esta página.</p>
+                <a href="#contacto" class="btn">Consultas de pauta</a>
             </div>
         </div>
     </section>
@@ -941,68 +908,6 @@
             updateUI();
         })();
 
-        // ==========================================
-        // CAROUSEL JS
-        // ==========================================
-        function initCarousel(wrapId, trackId) {
-            const wrap  = document.getElementById(wrapId);
-            const track = document.getElementById(trackId);
-            const prev  = wrap.querySelector('.carousel-arrow.prev');
-            const next  = wrap.querySelector('.carousel-arrow.next');
-            const cards = track.children;
-            const total = cards.length;
-            let pos = 0;
-
-            if (total <= 3) { prev.style.display = 'none'; next.style.display = 'none'; return; }
-
-            function getVisible() {
-                const w = window.innerWidth;
-                if (w <= 480) return 1;
-                if (w <= 768) return 2;
-                return 3;
-            }
-
-            function getCardWidth() {
-                const visible = getVisible();
-                const gap = window.innerWidth <= 768 ? 14 : 20;
-                const wrapWidth = wrap.querySelector('.carousel-window').clientWidth;
-                return (wrapWidth / visible) + (gap / visible);
-            }
-
-            function update() {
-                const cardW = getCardWidth();
-                track.style.transform = 'translateX(-' + (pos * cardW) + 'px)';
-            }
-
-            next.addEventListener('click', () => {
-                const visible = getVisible();
-                if (pos < total - visible) { pos++; update(); }
-            });
-
-            prev.addEventListener('click', () => {
-                if (pos > 0) { pos--; update(); }
-            });
-
-            // Touch swipe
-            let touchX = 0;
-            track.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
-            track.addEventListener('touchend', e => {
-                const diff = touchX - e.changedTouches[0].clientX;
-                const visible = getVisible();
-                if (Math.abs(diff) > 40) {
-                    if (diff > 0 && pos < total - visible) { pos++; update(); }
-                    else if (diff < 0 && pos > 0) { pos--; update(); }
-                }
-            });
-
-            window.addEventListener('resize', () => {
-                pos = Math.min(pos, total - getVisible());
-                update();
-            });
-        }
-
-        initCarousel('bannerCarousel', 'bannerTrack');
-        initCarousel('programCarousel', 'programTrack');
 
         // Scroll animations
         const revealEls = document.querySelectorAll('.section-header, .slide-card, .feed-card, .contact-content');
