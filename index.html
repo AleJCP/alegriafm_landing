@@ -279,6 +279,16 @@
         }
         .live-badge-subtle.on { color: rgba(255,255,255,0.9); }
 
+        .signal-status {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.55);
+            margin: 8px auto 0;
+            text-align: center;
+        }
+
         /* Ahora suena (solo el tema, en el reproductor) */
         .now-playing {
             display: block;
@@ -776,6 +786,7 @@
                     <i class="fas fa-play"></i>
                 </button>
                 <p class="live-badge-subtle" id="liveBadge">EN VIVO</p>
+                <p class="signal-status" id="signalStatus" hidden>Sin señal — reintentando…</p>
 
                 <!-- Ahora suena: solo el tema -->
                 <div class="now-playing" id="nowPlaying" hidden>
@@ -890,6 +901,7 @@
             const volUp     = document.getElementById('volUp');
             const eqBars    = document.getElementById('eqBars');
             const liveBadge = document.getElementById('liveBadge');
+            const signalEl  = document.getElementById('signalStatus');
             const STREAM   = 'https://stream.zeno.fm/u0mvuznrazhuv';
 
             let isPlaying = false;
@@ -946,6 +958,45 @@
                 }
             }
 
+            // ---- Estado de señal ----
+            // EN VIVO y ecualizador solo con audio real: si no hay sonido,
+            // se ocultan y aparece el aviso.
+            // El plazo es único: los reintentos NO lo renuevan.
+            let signalTimer = null;
+            let signalSince = 0;
+
+            function signalOk() {
+                return !audio.paused && audio.readyState >= 2;
+            }
+
+            function setNoSignal(on) {
+                if (on) {
+                    liveBadge.style.display = 'none';
+                    if (signalEl) signalEl.hidden = false;
+                    stopEQ();
+                } else {
+                    liveBadge.style.display = '';
+                    if (signalEl) signalEl.hidden = true;
+                    updateUI();
+                }
+            }
+
+            function markSignalStart() {
+                if (signalSince) return;
+                signalSince = Date.now();
+                clearTimeout(signalTimer);
+                signalTimer = setTimeout(function () {
+                    signalTimer = null;
+                    if (wantsPlay && !signalOk()) setNoSignal(true);
+                }, 8000);
+            }
+
+            function clearSignalWatch() {
+                signalSince = 0;
+                clearTimeout(signalTimer);
+                signalTimer = null;
+            }
+
             // Arranca o rearranca el stream. El cache-buster (?t=) evita
             // reusar el buffer viejo cuando se reconecta.
             function startStream() {
@@ -961,6 +1012,9 @@
                 wantsPlay = false;
                 clearTimeout(retryTimer);
                 retryTimer = null;
+                clearSignalWatch();
+                liveBadge.style.display = '';
+                if (signalEl) signalEl.hidden = true;
                 audio.pause();
                 updateUI();
             }
@@ -983,6 +1037,7 @@
                     wantsPlay = true;
                     retries = 0;
                     startStream();
+                    markSignalStart();
                     updateUI();
                 }
             }
@@ -1001,12 +1056,13 @@
             // el stream; acá se reconecta solo mientras el usuario quiera oír.
             let stallTimer = null;
 
-            audio.addEventListener('stalled', function () { scheduleRetry(); });
-            audio.addEventListener('error',   function () { scheduleRetry(); });
-            audio.addEventListener('ended',   function () { scheduleRetry(); });
+            audio.addEventListener('stalled', function () { scheduleRetry(); markSignalStart(); });
+            audio.addEventListener('error',   function () { scheduleRetry(); markSignalStart(); });
+            audio.addEventListener('ended',   function () { scheduleRetry(); markSignalStart(); });
 
             audio.addEventListener('waiting', function () {
                 clearTimeout(stallTimer);
+                markSignalStart();
                 stallTimer = setTimeout(function () {
                     if (wantsPlay && audio.readyState < 3) scheduleRetry();
                 }, 6000);
@@ -1015,6 +1071,8 @@
             audio.addEventListener('playing', function () {
                 clearTimeout(stallTimer);
                 retries = 0;
+                clearSignalWatch();
+                setNoSignal(false);
             });
 
             document.addEventListener('visibilitychange', function () {
