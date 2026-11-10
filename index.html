@@ -234,17 +234,17 @@
         }
         .live-badge-subtle.on { color: rgba(255,255,255,0.9); }
 
-        /* Ahora suena (Zeno.FM metadata) */
+        /* Ahora suena (ticker Zeno.FM) */
         .now-playing {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
             max-width: 100%;
             margin: 16px auto 22px;
             padding: 0 8px;
             font-size: 13px;
             line-height: 1.35;
+            text-align: left;
         }
 
         .now-playing[hidden] { display: none; }
@@ -266,22 +266,44 @@
             margin-right: 6px;
         }
 
-        .now-playing .np-title {
+        .now-playing .np-viewport {
+            flex: 1 1 auto;
             min-width: 0;
             overflow: hidden;
-            text-overflow: ellipsis;
+        }
+
+        .now-playing .np-title {
+            display: block;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             font-weight: 500;
             color: rgba(255,255,255,0.92);
         }
 
-        .now-playing.is-fallback .np-title {
-            color: rgba(255,255,255,0.5);
-            font-style: italic;
+        .now-playing .np-title.is-scrolling {
+            display: inline-block;
+            overflow: visible;
+            text-overflow: clip;
+            animation: np-marquee var(--np-dur, 16s) linear infinite;
+        }
+
+        @keyframes np-marquee {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+        }
+
+        .now-playing:hover .np-title.is-scrolling,
+        .now-playing:focus-within .np-title.is-scrolling {
+            animation-play-state: paused;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .now-playing .np-title.is-scrolling { animation: none; }
         }
 
         @media (max-width: 480px) {
-            .now-playing { flex-direction: column; gap: 3px; }
+            .now-playing { gap: 7px; padding: 0 4px; }
             .now-playing .np-title { font-size: 12px; }
         }
 
@@ -748,11 +770,13 @@
                 </button>
                 <p class="live-badge-subtle" id="liveBadge">EN VIVO</p>
 
-                <!-- Ahora suena: se completa por JS -->
-                <p class="now-playing" id="nowPlaying" hidden aria-live="polite">
-                    <span class="np-label">Ahora suena</span>
-                    <span class="np-title" id="nowPlayingTitle"></span>
-                </p>
+                <!-- Ahora suena: ticker -->
+                <div class="now-playing" id="nowPlaying" hidden>
+                    <span class="np-label" id="npLabel">Ahora suena:</span>
+                    <span class="np-viewport">
+                        <span class="np-title" id="nowPlayingTitle"></span>
+                    </span>
+                </div>
 
                 <!-- Equalizer -->
                 <div class="eq-bars" id="eqBars">
@@ -970,11 +994,17 @@
         // AHORA SUENA (metadata de Zeno.FM)
         // ==========================================
         (function () {
-            const box = document.getElementById('nowPlaying');
-            const out = document.getElementById('nowPlayingTitle');
-            if (!box || !out) return;
+            const box   = document.getElementById('nowPlaying');
+            const label = document.getElementById('npLabel');
+            const out   = document.getElementById('nowPlayingTitle');
+            const view  = box && box.querySelector('.np-viewport');
+            if (!box || !out || !view) return;
 
-            const FALLBACK = 'Música en vivo';
+            const PROMO = 'Próximamente: los programas de tu radio favorita — Alegría Radio 104.5 FM';
+            const SEP   = '   •   ';
+            const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+            let track = '';
             const ENDPOINT = 'https://api.zeno.fm/mounts/metadata/subscribe/u0mvuznrazhuv';
             const MINOR = ['de','del','la','las','el','los','y','e','o','u','a','al','en','con','por','para','que','un','una','lo','se','su','mi','tu'];
             const JUNK = /alegr[ií]a\s*radio|radio\s*alegr[ií]a|104[.,]?5/i;
@@ -1017,21 +1047,38 @@
                 return t;
             }
 
-            function render(text, isFallback) {
-                out.textContent = text;
-                box.classList.toggle('is-fallback', !!isFallback);
+            function paint() {
+                const parts = [];
+                if (track) parts.push(track);
+                parts.push(PROMO);
+                const full = parts.join(SEP);
+
                 box.hidden = false;
+                if (label) label.style.display = track ? '' : 'none';
+
+                out.classList.remove('is-scrolling');
+                out.style.removeProperty('--np-dur');
+                out.textContent = full;
+
+                // Si entra completo, se queda quieto (y si no, marquee)
+                if (reduceMotion) return;
+                if (out.scrollWidth <= view.clientWidth + 2) return;
+
+                const repeat = full + SEP;
+                out.textContent = repeat + repeat;
+
+                const dur = Math.max(14, Math.round((out.scrollWidth / 2) / 45));
+                out.style.setProperty('--np-dur', dur + 's');
+
+                void out.offsetWidth;
+                out.classList.add('is-scrolling');
             }
 
-            function fallback() {
-                if (!received) render(FALLBACK, true);
-            }
-
-            const timer = setTimeout(fallback, 10000);
+            const timer = setTimeout(function () { if (!received) paint(); }, 10000);
 
             if (typeof window.EventSource !== 'function') {
                 clearTimeout(timer);
-                fallback();
+                paint();
                 return;
             }
 
@@ -1040,7 +1087,7 @@
                 es = new EventSource(ENDPOINT);
             } catch (err) {
                 clearTimeout(timer);
-                fallback();
+                paint();
                 return;
             }
 
@@ -1052,18 +1099,21 @@
                 if (title) {
                     received = true;
                     clearTimeout(timer);
-                    render(title, false);
+                    track = title;
+                    paint();
                 } else if (!received) {
-                    render(FALLBACK, true);
+                    paint();
                 }
             });
 
             es.addEventListener('error', function () {
                 if (!received) {
                     clearTimeout(timer);
-                    render(FALLBACK, true);
+                    paint();
                 }
             });
+
+            window.addEventListener('resize', function () { paint(); });
         })();
 
 
