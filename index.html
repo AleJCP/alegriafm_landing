@@ -231,6 +231,43 @@
             font-weight: 600;
             margin-bottom: 28px;
             color: #fff;
+            position: relative;
+        }
+
+        /* Opción B: el botón va en el margen derecho, fuera del flujo,
+           así el título queda matemáticamente centrado */
+        .share-btn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            cursor: pointer;
+            transition: color .2s, border-color .2s, background .2s;
+        }
+
+        .share-btn:hover,
+        .share-btn:focus-visible {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(255,255,255,0.06);
+            outline: none;
+        }
+
+        .share-btn:active { transform: translateY(-50%) scale(0.93); }
+
+        @media (max-width: 480px) {
+            .player-title { gap: 10px; }
+            .share-btn { width: 30px; height: 30px; font-size: 11px; }
         }
 
         /* Large play/pause button */
@@ -823,7 +860,12 @@
         <div class="container">
             <div class="player-container">
                 <p class="player-tag">Sintonízanos</p>
-                <h2 class="player-title">Escúchanos en vivo</h2>
+                <h2 class="player-title">
+                    <span>Escúchanos en vivo</span>
+                    <button class="share-btn" id="shareBtn" type="button" aria-label="Compartir la radio" title="Compartir">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </h2>
 
                 <!-- Main play/pause button -->
                 <button class="player-main-btn" id="mainPlay" aria-label="Reproducir">
@@ -1201,6 +1243,7 @@
         (function () {
             const player      = document.getElementById('nowPlaying');
             const playerTitle = document.getElementById('nowPlayingTitle');
+            const shareBtn    = document.getElementById('shareBtn');
             const ticker      = document.getElementById('ticker');
             const tickerView  = ticker && ticker.querySelector('.ticker-viewport');
             const tickerTrack = document.getElementById('tickerTrack');
@@ -1319,6 +1362,46 @@
             function paint() {
                 paintPlayer();
                 paintTicker();
+            }
+
+            // ---- Compartir lo que está sonando ----
+            function shareUrl() {
+                return location.origin + location.pathname;
+            }
+
+            function shareMessage() {
+                return track
+                    ? ('Estoy escuchando ' + track + ' en Alegría Radio 104.5 FM')
+                    : 'Escucha Alegría Radio 104.5 FM en vivo';
+            }
+
+            function shareOk() {
+                const icon = shareBtn && shareBtn.querySelector('i');
+                if (!icon) return;
+                icon.className = 'fas fa-check';
+                setTimeout(function () { icon.className = 'fas fa-share-alt'; }, 1600);
+            }
+
+            if (shareBtn) {
+                shareBtn.addEventListener('click', function () {
+                    const data = {
+                        title: 'Alegría Radio 104.5 FM',
+                        text: shareMessage(),
+                        url: shareUrl()
+                    };
+
+                    if (navigator.share) {
+                        navigator.share(data).catch(function () {});
+                        return;
+                    }
+
+                    const plain = data.text + ' — ' + data.url;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(plain).then(shareOk).catch(function () {});
+                    } else {
+                        window.prompt('Copiá el link:', plain);
+                    }
+                });
             }
 
             // Pintado inmediato: el aviso se ve desde el arranque y el tema
