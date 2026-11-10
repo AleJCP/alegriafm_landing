@@ -72,6 +72,41 @@
         .top-bar .socials { display: flex; gap: 12px; align-items: center; }
         .top-bar .socials a { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; color: #fff; transition: transform 0.2s; }
         .top-bar .socials a:hover { transform: scale(1.15); }
+
+        /* Ticker del header (aviso + tema) */
+        .top-bar .ticker {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .top-bar .ticker[hidden] { display: none; }
+
+        .top-bar .ticker-viewport { display: block; overflow: hidden; }
+
+        .top-bar .ticker-track {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .top-bar .ticker-track.is-scrolling {
+            display: inline-block;
+            overflow: visible;
+            text-overflow: clip;
+            animation: np-marquee var(--np-dur, 16s) linear infinite;
+        }
+
+        .top-bar .ticker:hover .ticker-track.is-scrolling,
+        .top-bar .ticker:focus-within .ticker-track.is-scrolling {
+            animation-play-state: paused;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .top-bar .ticker-track.is-scrolling { animation: none; }
+        }
         .social-wa { background: #25D366; }
         .social-tg { background: #0088cc; }
         .social-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
@@ -118,6 +153,7 @@
         @media (max-width: 480px) {
             .container { padding: 0 16px; }
             .top-bar .live-indicator { font-size: 10px; letter-spacing: 1px; }
+            .top-bar .live-name { display: none; }
             .mini-btn { width: 24px; height: 24px; font-size: 10px; }
             .hero-player { padding: 24px 0 32px; }
             .player-title { font-size: 18px; }
@@ -234,43 +270,18 @@
         }
         .live-badge-subtle.on { color: rgba(255,255,255,0.9); }
 
-        /* Ahora suena (ticker Zeno.FM) */
+        /* Ahora suena (solo el tema, en el reproductor) */
         .now-playing {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            display: block;
             max-width: 100%;
             margin: 16px auto 22px;
             padding: 0 8px;
             font-size: 13px;
             line-height: 1.35;
-            text-align: left;
+            text-align: center;
         }
 
         .now-playing[hidden] { display: none; }
-
-        .now-playing .np-label {
-            flex: 0 0 auto;
-            font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.45);
-            white-space: nowrap;
-        }
-
-        .now-playing .np-label::before {
-            content: '\266A';
-            color: var(--gold);
-            font-size: 11px;
-            margin-right: 6px;
-        }
-
-        .now-playing .np-viewport {
-            flex: 1 1 auto;
-            min-width: 0;
-            overflow: hidden;
-        }
 
         .now-playing .np-title {
             display: block;
@@ -281,29 +292,12 @@
             color: rgba(255,255,255,0.92);
         }
 
-        .now-playing .np-title.is-scrolling {
-            display: inline-block;
-            overflow: visible;
-            text-overflow: clip;
-            animation: np-marquee var(--np-dur, 16s) linear infinite;
-        }
-
         @keyframes np-marquee {
             from { transform: translateX(0); }
             to   { transform: translateX(-50%); }
         }
 
-        .now-playing:hover .np-title.is-scrolling,
-        .now-playing:focus-within .np-title.is-scrolling {
-            animation-play-state: paused;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .now-playing .np-title.is-scrolling { animation: none; }
-        }
-
         @media (max-width: 480px) {
-            .now-playing { gap: 7px; padding: 0 4px; }
             .now-playing .np-title { font-size: 12px; }
         }
 
@@ -732,7 +726,12 @@
     <!-- TOP BAR -->
     <div class="top-bar">
         <div class="container">
-            <div class="live-indicator"><span class="live-dot"></span> Alegría Radio 104.5 FM  <button class="mini-btn" id="miniPlay" aria-label="Reproducir" title="Reproducir / Pausar"><i class="fas fa-play"></i></button></div>
+            <div class="live-indicator"><span class="live-dot"></span> <span class="live-name">Alegría Radio 104.5 FM</span>  <button class="mini-btn" id="miniPlay" aria-label="Reproducir" title="Reproducir / Pausar"><i class="fas fa-play"></i></button></div>
+            <div class="ticker" id="ticker" hidden>
+                <div class="ticker-viewport">
+                    <span class="ticker-track" id="tickerTrack"></span>
+                </div>
+            </div>
             <div class="socials">
                 <a href="https://wa.me/584141234567" class="social-wa" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                 <a href="https://t.me/alegriaradio104" class="social-tg" target="_blank" rel="noopener" title="Telegram"><i class="fab fa-telegram-plane"></i></a>
@@ -770,12 +769,9 @@
                 </button>
                 <p class="live-badge-subtle" id="liveBadge">EN VIVO</p>
 
-                <!-- Ahora suena: ticker -->
+                <!-- Ahora suena: solo el tema -->
                 <div class="now-playing" id="nowPlaying" hidden>
-                    <span class="np-label" id="npLabel">Ahora suena:</span>
-                    <span class="np-viewport">
-                        <span class="np-title" id="nowPlayingTitle"></span>
-                    </span>
+                    <span class="np-title" id="nowPlayingTitle"></span>
                 </div>
 
                 <!-- Equalizer -->
@@ -994,11 +990,12 @@
         // AHORA SUENA (metadata de Zeno.FM)
         // ==========================================
         (function () {
-            const box   = document.getElementById('nowPlaying');
-            const label = document.getElementById('npLabel');
-            const out   = document.getElementById('nowPlayingTitle');
-            const view  = box && box.querySelector('.np-viewport');
-            if (!box || !out || !view) return;
+            const player      = document.getElementById('nowPlaying');
+            const playerTitle = document.getElementById('nowPlayingTitle');
+            const ticker      = document.getElementById('ticker');
+            const tickerView  = ticker && ticker.querySelector('.ticker-viewport');
+            const tickerTrack = document.getElementById('tickerTrack');
+            if (!ticker || !tickerTrack) return;
 
             const PROMO = 'Próximamente: los programas de tu radio favorita — Alegría Radio 104.5 FM';
             const SEP   = '   •   ';
@@ -1047,31 +1044,42 @@
                 return t;
             }
 
+            function paintPlayer() {
+                if (!player || !playerTitle) return;
+                if (!track) {
+                    player.hidden = true;
+                    playerTitle.textContent = '';
+                    return;
+                }
+                playerTitle.textContent = track;
+                player.hidden = false;
+            }
+
+            function paintTicker() {
+                const text = track ? ('Ahora suena: ' + track + SEP + PROMO) : PROMO;
+
+                ticker.hidden = false;
+                tickerTrack.classList.remove('is-scrolling');
+                tickerTrack.style.removeProperty('--np-dur');
+                tickerTrack.textContent = text;
+
+                // Si entra completo, se queda quieto; si no, marquee
+                if (reduceMotion || !tickerView) return;
+                if (tickerTrack.scrollWidth <= tickerView.clientWidth + 2) return;
+
+                const repeat = text + SEP;
+                tickerTrack.textContent = repeat + repeat;
+
+                const dur = Math.max(14, Math.round((tickerTrack.scrollWidth / 2) / 45));
+                tickerTrack.style.setProperty('--np-dur', dur + 's');
+
+                void tickerTrack.offsetWidth;
+                tickerTrack.classList.add('is-scrolling');
+            }
+
             function paint() {
-                const parts = [];
-                if (track) parts.push(track);
-                parts.push(PROMO);
-                const full = parts.join(SEP);
-
-                box.hidden = false;
-                if (label) label.style.display = track ? '' : 'none';
-
-                out.classList.remove('is-scrolling');
-                out.style.removeProperty('--np-dur');
-                out.textContent = full;
-
-                // Si entra completo, se queda quieto (y si no, marquee)
-                if (reduceMotion) return;
-                if (out.scrollWidth <= view.clientWidth + 2) return;
-
-                const repeat = full + SEP;
-                out.textContent = repeat + repeat;
-
-                const dur = Math.max(14, Math.round((out.scrollWidth / 2) / 45));
-                out.style.setProperty('--np-dur', dur + 's');
-
-                void out.offsetWidth;
-                out.classList.add('is-scrolling');
+                paintPlayer();
+                paintTicker();
             }
 
             const timer = setTimeout(function () { if (!received) paint(); }, 10000);
